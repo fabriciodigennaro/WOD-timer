@@ -12,6 +12,8 @@ import com.wodtimer.app.data.repository.WorkoutRepositoryImpl
 import com.wodtimer.app.domain.repository.SettingsRepository
 import com.wodtimer.app.domain.repository.WorkoutHistoryRepository
 import com.wodtimer.app.domain.repository.WorkoutRepository
+import com.wodtimer.app.util.RealTimerClock
+import com.wodtimer.app.util.TimerClock
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,6 +24,10 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+
+    @Provides
+    @Singleton
+    fun provideTimerClock(): TimerClock = RealTimerClock()
 
     @Provides
     @Singleton

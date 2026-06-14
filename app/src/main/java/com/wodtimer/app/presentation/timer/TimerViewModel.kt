@@ -1,9 +1,9 @@
 package com.wodtimer.app.presentation.timer
 
-import android.os.SystemClock
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wodtimer.app.domain.model.*
+import com.wodtimer.app.util.TimerClock
 import com.wodtimer.app.domain.repository.SettingsRepository
 import com.wodtimer.app.domain.repository.WorkoutHistoryRepository
 import com.wodtimer.app.domain.repository.WorkoutRepository
@@ -23,7 +23,8 @@ class TimerViewModel @Inject constructor(
     private val workoutRepository: WorkoutRepository,
     private val soundManager: SoundManager,
     private val ttsManager: TtsManager,
-    private val vibrationManager: VibrationManager
+    private val vibrationManager: VibrationManager,
+    private val timerClock: TimerClock
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(TimerState())
@@ -115,11 +116,11 @@ class TimerViewModel @Inject constructor(
         _state.value = _state.value.copy(isRunning = true, phase = TimerPhase.PREPARE)
         timerJob = viewModelScope.launch {
             val prepareMs = _state.value.prepareSeconds * 1000L
-            val phaseStart = SystemClock.elapsedRealtime()
+            val phaseStart = timerClock.elapsedRealtime()
             var lastAnnouncedSecond = -1
 
             while (currentCoroutineContext().isActive) {
-                val elapsed = SystemClock.elapsedRealtime() - phaseStart
+                val elapsed = timerClock.elapsedRealtime() - phaseStart
                 val remaining = prepareMs - elapsed
                 val secondsRemaining = ((remaining + 999) / 1000).toInt()
 
@@ -151,7 +152,7 @@ class TimerViewModel @Inject constructor(
         )
         lastBeepMinute = -1
         lastTabataPhase = null
-        startTimestamp = SystemClock.elapsedRealtime()
+        startTimestamp = timerClock.elapsedRealtime()
         pausedElapsed = 0L
 
         timerJob = viewModelScope.launch {
@@ -170,7 +171,7 @@ class TimerViewModel @Inject constructor(
         val totalDurationMs = _state.value.totalDurationMillis
 
         while (currentCoroutineContext().isActive) {
-            val elapsed = SystemClock.elapsedRealtime() - startTimestamp + pausedElapsed
+            val elapsed = timerClock.elapsedRealtime() - startTimestamp + pausedElapsed
             _state.value = _state.value.copy(
                 elapsedMillis = elapsed,
                 phase = TimerPhase.WORK
@@ -198,13 +199,13 @@ class TimerViewModel @Inject constructor(
         var lastBeepSecond = -1
 
         while (currentRound < totalRounds && currentCoroutineContext().isActive) {
-            val roundStart = SystemClock.elapsedRealtime()
+            val roundStart = timerClock.elapsedRealtime()
             lastBeepSecond = -1
 
             _state.value = _state.value.copy(
                 currentRound = currentRound + 1,
                 totalRounds = totalRounds,
-                elapsedMillis = SystemClock.elapsedRealtime() - startTimestamp + pausedElapsed,
+                elapsedMillis = timerClock.elapsedRealtime() - startTimestamp + pausedElapsed,
                 phase = TimerPhase.WORK
             )
 
@@ -216,10 +217,10 @@ class TimerViewModel @Inject constructor(
             }
 
             while (currentCoroutineContext().isActive) {
-                val roundElapsed = SystemClock.elapsedRealtime() - roundStart
+                val roundElapsed = timerClock.elapsedRealtime() - roundStart
 
                 _state.value = _state.value.copy(
-                    elapsedMillis = SystemClock.elapsedRealtime() - startTimestamp + pausedElapsed
+                    elapsedMillis = timerClock.elapsedRealtime() - startTimestamp + pausedElapsed
                 )
 
                 val remainingInRound = intervalMs - roundElapsed
@@ -254,7 +255,7 @@ class TimerViewModel @Inject constructor(
         var isWork = true
 
         while (round < totalRounds && currentCoroutineContext().isActive) {
-            val phaseStart = SystemClock.elapsedRealtime()
+            val phaseStart = timerClock.elapsedRealtime()
             val durationMs = if (isWork) workMs else restMs
             val phase = if (isWork) TimerPhase.WORK else TimerPhase.REST
 
@@ -262,7 +263,7 @@ class TimerViewModel @Inject constructor(
                 currentRound = round + 1,
                 totalRounds = totalRounds,
                 phase = phase,
-                elapsedMillis = SystemClock.elapsedRealtime() - startTimestamp + pausedElapsed
+                elapsedMillis = timerClock.elapsedRealtime() - startTimestamp + pausedElapsed
             )
 
             // Phase start sounds
@@ -281,9 +282,9 @@ class TimerViewModel @Inject constructor(
                 else -> {}
             }
 
-            while (SystemClock.elapsedRealtime() - phaseStart < durationMs && currentCoroutineContext().isActive) {
+            while (timerClock.elapsedRealtime() - phaseStart < durationMs && currentCoroutineContext().isActive) {
                 _state.value = _state.value.copy(
-                    elapsedMillis = SystemClock.elapsedRealtime() - startTimestamp + pausedElapsed
+                    elapsedMillis = timerClock.elapsedRealtime() - startTimestamp + pausedElapsed
                 )
                 delay(50)
             }
@@ -303,7 +304,7 @@ class TimerViewModel @Inject constructor(
         val durationMs = _state.value.totalDurationMillis
 
         while (currentCoroutineContext().isActive) {
-            val elapsed = SystemClock.elapsedRealtime() - startTimestamp + pausedElapsed
+            val elapsed = timerClock.elapsedRealtime() - startTimestamp + pausedElapsed
             val remaining = durationMs - elapsed
 
             _state.value = _state.value.copy(
@@ -344,7 +345,7 @@ class TimerViewModel @Inject constructor(
         var isWork = true
 
         while (set < totalSets && currentCoroutineContext().isActive) {
-            val phaseStart = SystemClock.elapsedRealtime()
+            val phaseStart = timerClock.elapsedRealtime()
             val durationMs = if (isWork) workMs else restMs
             val phase = if (isWork) TimerPhase.WORK else TimerPhase.REST
 
@@ -352,7 +353,7 @@ class TimerViewModel @Inject constructor(
                 currentSet = set + 1,
                 totalSets = totalSets,
                 phase = phase,
-                elapsedMillis = SystemClock.elapsedRealtime() - startTimestamp + pausedElapsed
+                elapsedMillis = timerClock.elapsedRealtime() - startTimestamp + pausedElapsed
             )
 
             // Phase sounds
@@ -368,9 +369,9 @@ class TimerViewModel @Inject constructor(
                 else -> {}
             }
 
-            while (SystemClock.elapsedRealtime() - phaseStart < durationMs && currentCoroutineContext().isActive) {
+            while (timerClock.elapsedRealtime() - phaseStart < durationMs && currentCoroutineContext().isActive) {
                 _state.value = _state.value.copy(
-                    elapsedMillis = SystemClock.elapsedRealtime() - startTimestamp + pausedElapsed
+                    elapsedMillis = timerClock.elapsedRealtime() - startTimestamp + pausedElapsed
                 )
                 delay(50)
             }
@@ -392,7 +393,7 @@ class TimerViewModel @Inject constructor(
 
         while (blockIndex < blocks.size && currentCoroutineContext().isActive) {
             val block = blocks[blockIndex]
-            val blockStart = SystemClock.elapsedRealtime()
+            val blockStart = timerClock.elapsedRealtime()
             val durationMs = block.durationSeconds * 1000L
 
             _state.value = _state.value.copy(
@@ -410,9 +411,9 @@ class TimerViewModel @Inject constructor(
             // Block start notification
             soundManager.playBeep()
 
-            while (SystemClock.elapsedRealtime() - blockStart < durationMs && currentCoroutineContext().isActive) {
+            while (timerClock.elapsedRealtime() - blockStart < durationMs && currentCoroutineContext().isActive) {
                 _state.value = _state.value.copy(
-                    elapsedMillis = SystemClock.elapsedRealtime() - startTimestamp + pausedElapsed
+                    elapsedMillis = timerClock.elapsedRealtime() - startTimestamp + pausedElapsed
                 )
                 delay(50)
             }
@@ -426,13 +427,13 @@ class TimerViewModel @Inject constructor(
     fun pause() {
         if (!_state.value.isRunning || _state.value.isPaused) return
         timerJob?.cancel()
-        pausedElapsed += SystemClock.elapsedRealtime() - startTimestamp
+        pausedElapsed += timerClock.elapsedRealtime() - startTimestamp
         _state.value = _state.value.copy(isPaused = true, isRunning = false)
     }
 
     fun resume() {
         if (!_state.value.isPaused) return
-        startTimestamp = SystemClock.elapsedRealtime()
+        startTimestamp = timerClock.elapsedRealtime()
         _state.value = _state.value.copy(isRunning = true, isPaused = false)
 
         timerJob = viewModelScope.launch {

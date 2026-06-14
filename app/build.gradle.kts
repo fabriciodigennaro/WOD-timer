@@ -3,6 +3,13 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.dagger.hilt.android")
     id("com.google.devtools.ksp")
+    id("jacoco")
+}
+
+val jacocoVersion = "0.8.11"
+
+jacoco {
+    toolVersion = jacocoVersion
 }
 
 android {
@@ -32,6 +39,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            enableUnitTestCoverage = true
+            enableAndroidTestCoverage = true
+        }
         release {
             isMinifyEnabled = false
             signingConfig = signingConfigs.getByName("release")
@@ -57,6 +68,12 @@ android {
 
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.10"
+    }
+
+    testOptions {
+        unitTests {
+            isReturnDefaultValues = true
+        }
     }
 
     packaging {
@@ -111,7 +128,46 @@ dependencies {
 
     // Testing
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.mockito:mockito-core:5.10.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("app.cash.turbine:turbine:1.0.0")
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
+    // Real org.json implementation for unit tests (Android stubs return null)
+    testImplementation("org.json:json:20230227")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+}
+
+// Custom Jacoco report excluding non-testable code
+val jacocoExcludes = listOf(
+    "**/R.class", "**/R$*.class", "**/BuildConfig.*", "**/Manifest*.*",
+    "**/WODTimerApp*", "**/MainActivity*",
+    "**/di/**",
+    "**/data/local/dao/**", "**/data/local/AppDatabase*", "**/data/local/entity/**",
+    "**/domain/model/**", "**/domain/repository/**",
+    "**/presentation/navigation/**", "**/presentation/theme/**",
+    "**/presentation/*/components/**", "**/presentation/**/*Screen*",
+    "**/service/**",
+    "**/util/Constants*", "**/util/TimerClock*",
+    "**/hilt_aggregated_deps/**", "**/dagger.hilt*/**"
+)
+
+tasks.register<JacocoReport>("jacocoUnitTestReport") {
+    dependsOn("testDebugUnitTest")
+
+    reports {
+        html.required.set(true)
+        xml.required.set(true)
+    }
+
+    val debugTree = fileTree("${layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
+        exclude(jacocoExcludes)
+    }
+    val mainSrc = "${project.projectDir}/src/main/java"
+
+    sourceDirectories.setFrom(files(mainSrc))
+    classDirectories.setFrom(files(debugTree))
+    executionData.setFrom(fileTree("${layout.buildDirectory.get()}/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec"))
 }
