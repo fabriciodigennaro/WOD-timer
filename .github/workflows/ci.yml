@@ -29,23 +29,7 @@ jobs:
         run: ./gradlew jacocoUnitTestReport --no-daemon
 
       - name: Check coverage threshold
-        run: |
-          COVERAGE=$(python3 -c "
-import xml.etree.ElementTree as ET
-tree = ET.parse('app/build/reports/jacoco/jacocoUnitTestReport/jacocoUnitTestReport.xml')
-root = tree.getroot()
-counters = root.findall('.//counter[@type=\"INSTRUCTION\"]')
-missed = sum(int(c.get('missed', 0)) for c in counters)
-covered = sum(int(c.get('covered', 0)) for c in counters)
-total = missed + covered
-pct = covered * 100.0 / total if total > 0 else 0.0
-print(f'Coverage: {covered}/{total} = {pct:.1f}%')
-if pct < 95.0:
-  print('FAIL: Coverage below 95%')
-  exit(1)
-print('PASS: Coverage >= 95%')
-")
-          echo "$COVERAGE"
+        run: python3 scripts/check_coverage.py
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
