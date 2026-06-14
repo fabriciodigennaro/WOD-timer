@@ -62,7 +62,7 @@ class HomeViewModelTest {
         whenever(workoutRepository.getAllWorkouts()).thenReturn(flowOf(emptyList()))
         whenever(workoutRepository.getFavoriteWorkouts()).thenReturn(flowOf(emptyList()))
 
-        val viewModel = HomeViewModel(workoutRepository, settingsRepository)
+        HomeViewModel(workoutRepository, settingsRepository)
         advanceUntilIdle()
 
         verify(settingsRepository).initDefaultSettings()

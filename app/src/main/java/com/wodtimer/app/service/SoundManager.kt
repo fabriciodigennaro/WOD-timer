@@ -3,7 +3,6 @@ package com.wodtimer.app.service
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioFormat
-import android.media.AudioManager
 import android.media.AudioTrack
 import android.os.Build
 import android.os.VibrationEffect
@@ -62,14 +61,23 @@ class SoundManager @Inject constructor(
                 samples[i] = (sample.coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt())).toShort()
             }
 
-            val audioTrack = AudioTrack(
-                AudioManager.STREAM_ALARM,
-                sampleRate,
-                AudioFormat.CHANNEL_OUT_MONO,
-                AudioFormat.ENCODING_PCM_16BIT,
-                numSamples * 2,
-                AudioTrack.MODE_STATIC
-            )
+            val audioTrack = AudioTrack.Builder()
+                .setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_ALARM)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build()
+                )
+                .setAudioFormat(
+                    AudioFormat.Builder()
+                        .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                        .setSampleRate(sampleRate)
+                        .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                        .build()
+                )
+                .setBufferSizeInBytes(numSamples * 2)
+                .setTransferMode(AudioTrack.MODE_STATIC)
+                .build()
 
             audioTrack.write(samples, 0, numSamples)
             audioTrack.setVolume(settings.soundVolume)

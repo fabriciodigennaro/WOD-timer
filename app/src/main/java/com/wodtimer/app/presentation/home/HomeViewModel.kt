@@ -47,7 +47,7 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun onTimerSelected(mode: TimerMode) {
+    fun onTimerSelected(@Suppress("UNUSED_PARAMETER") mode: TimerMode) {
         // Navigation handled by the composable
     }
 

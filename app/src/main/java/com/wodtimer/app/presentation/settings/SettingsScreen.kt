@@ -5,6 +5,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.VolumeDown
+import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -31,7 +34,7 @@ fun SettingsScreen(
                 title = { Text("Settings", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = TimerWhite)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TimerWhite)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -56,7 +59,7 @@ fun SettingsScreen(
             SettingsSwitch(
                 title = "Sound Effects",
                 subtitle = "Beeps and alerts during workout",
-                icon = Icons.Outlined.VolumeUp,
+                icon = Icons.AutoMirrored.Outlined.VolumeUp,
                 checked = settings.soundEnabled,
                 onToggle = { viewModel.toggleSound() }
             )
@@ -90,7 +93,7 @@ fun SettingsScreen(
             SettingsSlider(
                 title = "Sound Volume",
                 subtitle = "${(settings.soundVolume * 100).toInt()}%",
-                icon = Icons.Outlined.VolumeDown,
+                icon = Icons.AutoMirrored.Outlined.VolumeDown,
                 value = settings.soundVolume,
                 valueRange = 0f..1f,
                 steps = 9,

@@ -19,9 +19,9 @@ import com.wodtimer.app.util.TimeFormatter
 @Composable
 fun TimerDisplay(
     elapsedMillis: Long,
-    totalDurationMillis: Long,
+    @Suppress("UNUSED_PARAMETER") totalDurationMillis: Long,
     phase: TimerPhase,
-    modeName: String,
+    @Suppress("UNUSED_PARAMETER") modeName: String,
     modifier: Modifier = Modifier
 ) {
     val displayColor = when (phase) {

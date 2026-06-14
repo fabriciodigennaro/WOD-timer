@@ -200,7 +200,6 @@ class TimerViewModel @Inject constructor(
 
         while (currentRound < totalRounds && currentCoroutineContext().isActive) {
             val roundStart = timerClock.elapsedRealtime()
-            lastBeepSecond = -1
 
             _state.value = _state.value.copy(
                 currentRound = currentRound + 1,
